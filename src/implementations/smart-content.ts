@@ -51,14 +51,14 @@ export default class MultilingualSmartContent extends MultilingualObject<SmartCo
    * 取得指定語言的智慧內容
    */
   public getSmartContent(lang: SupportedLanguage): SmartContent | undefined {
-    return this.getItem(lang);
+    return this.get(lang);
   }
 
   /**
    * 設定指定語言的智慧內容
    */
   public setSmartContent(lang: SupportedLanguage, content: SmartContent): void {
-    this.setItem(lang, content);
+    this.set(lang, content);
   }
 
   /**

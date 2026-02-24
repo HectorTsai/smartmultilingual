@@ -1,7 +1,23 @@
-import { render as gfmRender } from "@deno/gfm";
-import { SmartContent } from './smart-content.ts';
+import type { SmartContent } from './smart-content.ts';
 import type { SupportedFormat } from '../file/formats.ts';
 import { 格式對應表 } from '../file/formats.ts';
+
+type GfmRender = (markdown: string) => string | Promise<string>;
+
+let cachedGfmRenderer: GfmRender | null = null;
+
+async function getGfmRenderer(): Promise<GfmRender | null> {
+  if (cachedGfmRenderer) return cachedGfmRenderer;
+
+  try {
+    const mod = await import("@deno/gfm");
+    cachedGfmRenderer = mod.render;
+    return cachedGfmRenderer;
+  } catch (error) {
+    console.warn("[ContentRenderer] 無法載入 @deno/gfm，將回退為原始 Markdown:", error);
+    return null;
+  }
+}
 
 /**
  * 內容渲染器 - 負責各種格式的內容渲染
@@ -10,10 +26,10 @@ export class ContentRenderer {
   /**
    * 渲染 Markdown 為 HTML
    */
-  public static renderMarkdown(
+  public static async renderMarkdown(
     markdown: string,
     converters: Record<string, unknown> = {},
-  ): string {
+  ): Promise<string> {
     if (!markdown) return "";
 
     // 處理轉換器（將 [key] 替換為實際值）
@@ -23,7 +39,9 @@ export class ContentRenderer {
       processedMarkdown = processedMarkdown.replace(regex, String(value));
     }
 
-    return gfmRender(processedMarkdown);
+    const renderer = await getGfmRenderer();
+    const rendered = renderer ? await renderer(processedMarkdown) : processedMarkdown;
+    return typeof rendered === "string" ? rendered : String(rendered);
   }
 
   /**
@@ -40,7 +58,7 @@ export class ContentRenderer {
 
     switch (format) {
       case "HTML":
-        return this.renderToHTML(contentType, rawContent, converters);
+        return await this.renderToHTML(contentType, rawContent, converters);
       case "MARKDOWN":
         return this.renderToMarkdown(contentType, rawContent, converters);
       case "TEXT":
@@ -49,16 +67,16 @@ export class ContentRenderer {
     }
   }
 
-  private static renderToHTML(
+  private static async renderToHTML(
     format: SupportedFormat,
     content: string | Uint8Array,
     converters: Record<string, unknown> = {},
-  ): string {
+  ): Promise<string> {
     if (format === "MARKDOWN" || format === "TEXT") {
       const markdown = this.renderToMarkdown(format, content, converters);
-      return this.renderMarkdown(markdown, converters);
+      return await this.renderMarkdown(markdown, converters);
     }
-    return this.renderBinaryToHTML(format, content);
+    return Promise.resolve(this.renderBinaryToHTML(format, content));
   }
 
   private static renderToMarkdown(
@@ -80,7 +98,7 @@ export class ContentRenderer {
   }
 
   private static renderToText(
-    format: SupportedFormat,
+    _format: SupportedFormat,
     content: string | Uint8Array,
   ): string {
     return typeof content === "string" ? content : "";

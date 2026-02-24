@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
-import { add } from "./mod.ts";
+import { MultilingualString } from "./mod.ts";
 
-Deno.test(function addTest() {
-  assertEquals(add(2, 3), 5);
+Deno.test("mod 匯出 MultilingualString", () => {
+  const str = new MultilingualString({ en: "Hello" });
+  assertEquals(str.getText("en"), "Hello");
 });

@@ -1,49 +1,46 @@
-import { SUPPORTED_LANGUAGE_SET } from './types.ts';
+import { SUPPORTED_LANGUAGES, SUPPORTED_LANGUAGE_SET } from './types.ts';
 import type { SupportedLanguage, MultilingualData } from './types.ts';
 
-interface MultilingualIndex<T> {
-  [key: string]: T | undefined;
-}
-
-export default class MultilingualObject<T> {
-  private _data: Record<string, T | undefined> = {};
+class MultilingualObject<T> {
+  // deno-lint-ignore no-explicit-any
+  [key: string]: any;
 
   protected constructor(data?: MultilingualData<T>) {
     if (data) {
       for (const [lang, value] of Object.entries(data)) {
-        if (SUPPORTED_LANGUAGE_SET.has(lang as SupportedLanguage)) {
-          this._data[lang] = value;
-        }
+        this.set(lang, value);
       }
     }
   }
 
-  public getItem(key: string): T | undefined {
-    return this._data[key];
+  public get(key: string): T | undefined {
+    if (!this.isSupportedLanguage(key)) return undefined;
+    return this[key] as T | undefined;
   }
 
-  public setItem(key: string, value: T | undefined): void {
-    if (SUPPORTED_LANGUAGE_SET.has(key as SupportedLanguage)) {
-      this._data[key] = value;
+  public set(key: string, value: T | undefined): void {
+    if (!this.isSupportedLanguage(key)) return;
+    if (value === undefined) {
+      delete this[key];
+    } else {
+      this[key] = value;
     }
   }
 
   /** 檢查是否有指定語言的內容 */
   public has(lang: SupportedLanguage): boolean {
-    return !!this._data[lang];
+    return this[lang] !== undefined;
   }
 
   public delete(lang: SupportedLanguage): boolean {
-    const hasKey = !!this._data[lang];
-    delete this._data[lang];
-    return hasKey;
+    if (!this.has(lang)) return false;
+    delete this[lang];
+    return true;
   }
 
   /** 取得所有可用的語言 */
   public getAllAvailableLanguages(): SupportedLanguage[] {
-    return Object.keys(this._data).filter(
-      (key) => SUPPORTED_LANGUAGE_SET.has(key as SupportedLanguage)
-    ) as SupportedLanguage[];
+    return SUPPORTED_LANGUAGES.filter((lang) => this.has(lang)) as SupportedLanguage[];
   }
 
   /** 取得第一個可用的語言 */
@@ -68,14 +65,14 @@ export default class MultilingualObject<T> {
    */
   public toJSON(languageSet?: SupportedLanguage[]): MultilingualData<T> {
     const result: Record<string, T> = {} as MultilingualData<T>;
-    
+
     for (const lang of (languageSet || this.getAllAvailableLanguages())) {
-      const data = this._data[lang];
+      const data = this[lang] as T | undefined;
       if (data !== undefined) {
         result[lang] = data;
       }
     }
-    
+
     return result as MultilingualData<T>;
   }
 
@@ -111,7 +108,7 @@ export default class MultilingualObject<T> {
     const merged = new MultilingualObject<T>();
     for (const obj of objects) {
       for (const lang of obj.getAllAvailableLanguages()) {
-        merged._data[lang] = obj._data[lang];
+        merged.set(lang, obj.get(lang));
       }
     }
     return merged;
@@ -137,4 +134,11 @@ export default class MultilingualObject<T> {
       return text;
     }
   }
+
+  private isSupportedLanguage(lang: string): lang is SupportedLanguage {
+    return SUPPORTED_LANGUAGE_SET.has(lang as SupportedLanguage);
+  }
 }
+
+export { MultilingualObject };
+export default MultilingualObject;

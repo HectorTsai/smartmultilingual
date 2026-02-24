@@ -30,7 +30,7 @@ export default class MultilingualString extends MultilingualObject<string> {
    * @returns 文字內容，如果不存在則返回 undefined
    */
   public getText(lang: string): string | undefined {
-    return this.getItem(lang);
+    return this.get(lang);
   }
 
   /**
@@ -39,7 +39,7 @@ export default class MultilingualString extends MultilingualObject<string> {
    * @param text 文字內容
    */
   public setText(lang: string, text: string): void {
-    this.setItem(lang, text);
+    this.set(lang, text);
   }
 
   /**

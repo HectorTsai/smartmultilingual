@@ -25,11 +25,11 @@ import { MultilingualString, SmartContent } from "@dui/smartmultilingual";
 // 創建多國語言字串
 const str = new MultilingualString({
   en: "Hello",
-  zh: "你好"
+  "zh-tw": "你好"
 });
 
 // 獲取特定語言
-console.log(str.get("zh")); // 輸出：你好
+console.log(str.get("zh-tw")); // 輸出：你好
 
 // 使用智慧內容
 const content = new SmartContent("path/to/content.md");

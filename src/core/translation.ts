@@ -19,33 +19,12 @@ export interface TranslationInterface {
   ): Promise<string>;
 }
 
+import { GoogleTranslation } from './providers/google.ts';
+
 /**
- * 預設的翻譯服務實作
- * 使用 fetch 呼叫 API 端點
+ * 預設翻譯服務：目前採用 Google Translate 實作
  */
-export class DefaultTranslation implements TranslationInterface {
-  async translate(
-    from: string,
-    to: string,
-    text: string,
-    _host?: string
-  ): Promise<string> {
-    try {
-      const url = encodeURI(
-        `/api/語言/翻譯?from=${from}&to=${to}&text=${text}`
-      );
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        return data.translated;
-      }
-      return text;
-    } catch (error) {
-      console.error(`[DefaultTranslation] 翻譯失敗 ${from} -> ${to}: ${text}`, error);
-      return text;
-    }
-  }
-}
+export class DefaultTranslation extends GoogleTranslation {}
 
 /**
  * 全域翻譯服務註冊器
