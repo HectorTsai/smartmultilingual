@@ -1,0 +1,194 @@
+import MultilingualObject from '../core/base.ts';
+import { SmartContent } from '../utils/content/smart-content.ts';
+import { ContentRenderer } from '../utils/content/renderer.ts';
+import type { MultilingualData, SupportedLanguage } from '../core/types.ts';
+
+/**
+ * 多國語言智慧內容類別
+ * 結合多國語言處理和智慧內容載入的終極解決方案
+ */
+export default class MultilingualSmartContent extends MultilingualObject<SmartContent> {
+  /**
+   * 創建多國語言智慧內容實例
+   * @param data 可選的初始資料
+   */
+  public constructor(
+    data?: MultilingualData<SmartContent | { format: string; content: string | Uint8Array }>,
+  ) {
+    super();
+
+    if (data) {
+      for (const [lang, content] of Object.entries(data)) {
+        if (content instanceof SmartContent) {
+          this.set(lang as SupportedLanguage, content);
+        } else if (content && typeof content === "object" && "format" in content && "content" in content) {
+          this.set(lang as SupportedLanguage, new SmartContent({
+            format: content.format as any, // 這裡需要更好的型別處理
+            content: content.content,
+          }));
+        }
+      }
+    }
+  }
+
+  /**
+   * 從多國語言資料建立實例
+   */
+  public static fromData(
+    data: MultilingualData<{ format: string; content: string | Uint8Array }>
+  ): MultilingualSmartContent {
+    const instance = new MultilingualSmartContent();
+    for (const [lang, content] of Object.entries(data)) {
+      instance.set(lang as SupportedLanguage, new SmartContent({
+        format: content.format as any,
+        content: content.content,
+      }));
+    }
+    return instance;
+  }
+
+  /**
+   * 取得指定語言的智慧內容
+   */
+  public getSmartContent(lang: SupportedLanguage): SmartContent | undefined {
+    return this.getItem(lang);
+  }
+
+  /**
+   * 設定指定語言的智慧內容
+   */
+  public setSmartContent(lang: SupportedLanguage, content: SmartContent): void {
+    this.setItem(lang, content);
+  }
+
+  /**
+   * 非同步渲染內容
+   * @param lang 指定語言
+   * @param format 輸出格式
+   * @param converters 內容轉換器
+   */
+  public async renderAsync(
+    lang: SupportedLanguage,
+    format: "TEXT" | "HTML" | "MARKDOWN" = "TEXT",
+    converters?: Record<string, unknown>
+  ): Promise<string> {
+    const content = this.getSmartContent(lang);
+    if (!content) return '';
+
+    await content.fetchAsync();
+    return ContentRenderer.render(content, format, converters);
+  }
+
+  /**
+   * 尋找支援指定格式的語言
+   */
+  public findLanguagesByFormat(format: string): SupportedLanguage[] {
+    const result: SupportedLanguage[] = [];
+
+    for (const lang of this.getAllAvailableLanguages()) {
+      const content = this.getSmartContent(lang);
+      if (content && content.format === format) {
+        result.push(lang);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * 尋找支援文字格式的語言
+   */
+  public findTextLanguages(): SupportedLanguage[] {
+    const result: SupportedLanguage[] = [];
+
+    for (const lang of this.getAllAvailableLanguages()) {
+      const content = this.getSmartContent(lang);
+      if (content && content.isTextFormat) {
+        result.push(lang);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * 尋找支援二進位格式的語言
+   */
+  public findBinaryLanguages(): SupportedLanguage[] {
+    const result: SupportedLanguage[] = [];
+
+    for (const lang of this.getAllAvailableLanguages()) {
+      const content = this.getSmartContent(lang);
+      if (content && content.isBinaryFormat) {
+        result.push(lang);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * 非同步轉換為內容
+   * @param preferredLang 偏好語言
+   * @param format 輸出格式
+   * @param converters 內容轉換器
+   */
+  public async toContentAsync(
+    preferredLang?: SupportedLanguage,
+    format: "TEXT" | "HTML" | "MARKDOWN" = "TEXT",
+    converters?: Record<string, unknown>
+  ): Promise<string> {
+    const sourceLang = this.findBestSourceLanguage(preferredLang);
+    if (!sourceLang) return '';
+
+    return this.renderAsync(sourceLang, format, converters);
+  }
+
+  /**
+   * 從檔案建立多國語言智慧內容
+   */
+  public static async fromFile(
+    file: File,
+    lang: SupportedLanguage = 'en'
+  ): Promise<MultilingualSmartContent> {
+    const smartContent = await SmartContent.fromFile(file);
+    return new MultilingualSmartContent({
+      [lang]: smartContent,
+    });
+  }
+
+  /**
+   * 從 JSON 建立實例
+   */
+  public static fromJSON(json: unknown): MultilingualSmartContent {
+    if (typeof json !== 'object' || json === null) {
+      return new MultilingualSmartContent();
+    }
+
+    const data: MultilingualData<SmartContent> = {};
+
+    for (const [lang, contentData] of Object.entries(json as Record<string, unknown>)) {
+      if (contentData && typeof contentData === 'object') {
+        data[lang as SupportedLanguage] = SmartContent.fromJSON(contentData);
+      }
+    }
+
+    return new MultilingualSmartContent(data);
+  }
+
+  /**
+   * 複製實例
+   */
+  public override clone(): MultilingualSmartContent {
+    const data: MultilingualData<SmartContent> = {};
+
+    for (const lang of super.getAllAvailableLanguages()) {
+      const content = this.getSmartContent(lang);
+      if (content) {
+        data[lang] = content.clone();
+      }
+    }
+
+    return new MultilingualSmartContent(data);
+  }
+}
