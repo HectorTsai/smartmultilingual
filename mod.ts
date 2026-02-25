@@ -8,7 +8,8 @@ export { default as MultilingualBinary } from './src/implementations/binary.ts';
 export { default as MultilingualSmartContent } from './src/implementations/smart-content.ts';
 
 // Smart content utilities
-export { SmartContent, ContentRenderer } from './src/utils/content/index.ts';
+export { SmartContent } from './src/core/content/smart-content.ts';
+export { ContentRenderer } from './src/core/content/renderer.ts';
 
 // Translation services
 export { type TranslationInterface, DefaultTranslation, registerTranslation, getTranslation, clearTranslation } from './src/core/translation.ts';

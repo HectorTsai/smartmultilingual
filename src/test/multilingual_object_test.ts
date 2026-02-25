@@ -1,6 +1,6 @@
 import { assertEquals, assertFalse, assert } from "@std/assert";
-import MultilingualObject from "./src/core/base.ts";
-import type { MultilingualData, SupportedLanguage } from "./src/core/types.ts";
+import MultilingualObject from "../core/base.ts";
+import type { MultilingualData, SupportedLanguage } from "../core/types.ts";
 
 class TestMultilingualObject extends MultilingualObject<string> {
   public constructor(data?: MultilingualData<string>) {
@@ -40,7 +40,8 @@ Deno.test("MultilingualObject enumerates available languages and best source", (
   assert(langs.includes("zh-tw" as SupportedLanguage));
   assert(langs.includes("ja" as SupportedLanguage));
 
-  assertEquals(obj.getFirstAvailableLanguage(), "en");
+  // 根據 SUPPORTED_LANGUAGES 的順序，第一個可用語言應為 zh-tw
+  assertEquals(obj.getFirstAvailableLanguage(), "zh-tw");
   assertEquals(obj.findBestSourceLanguage(), "en");
   assertEquals(obj.findBestSourceLanguage("ja" as SupportedLanguage), "ja");
 });

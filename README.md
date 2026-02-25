@@ -1,59 +1,71 @@
 # SmartMultilingual
 
-一個智慧的多語言內容庫，用於處理多語言內容，並具備智慧內容載入功能。
+An intelligent multilingual content library for Deno. It handles multilingual strings, smart content loading, and translation with sensible defaults.
 
-## 功能
+- Chinese docs: see [docs/zh-tw.md](./docs/zh-tw.md)
+- 繁體中文文件：請見 [docs/zh-tw.md](./docs/zh-tw.md)
+- 简体中文文档：请见 [docs/zh-cn.md](./docs/zh-cn.md)
 
-- **多國語言物件**：支援多語言字串、二進位物件和智慧內容。
-- **智慧內容載入**：根據內容自動擷取檔案或遠端資料。
-- **翻譯服務**：提供註冊和獲取翻譯服務的介面。
-- **資源處理**：處理不同格式的檔案資源。
+## Features
 
-## 安裝
+- **Multilingual objects**: strings, binaries, and smart content.
+- **Smart content loading**: auto-fetch and format inference for http/https/file/data/ftp URLs.
+- **Translation service**: pluggable; defaults to Google Translate when none is registered.
+- **Resource handling**: basic file format utilities.
 
-使用 Deno：
+## Installation
 
 ```bash
 deno add @dui/smartmultilingual
 ```
 
-## 用法
+## Usage
 
 ```typescript
-import { MultilingualString, SmartContent } from "@dui/smartmultilingual";
+import {
+  MultilingualString,
+  MultilingualSmartContent,
+  SmartContent,
+} from "@dui/smartmultilingual";
 
-// 創建多國語言字串
-const str = new MultilingualString({
-  en: "Hello",
-  "zh-tw": "你好"
-});
+// Multilingual string: auto-translate missing target language (default Google, or registerTranslation to override)
+const str = new MultilingualString({ en: "Hello" });
+const zh = await str.toStringAsync("zh-tw");
 
-// 獲取特定語言
-console.log(str.get("zh-tw")); // 輸出：你好
+// Smart content: auto-detect and fetch content, infer format (TEXT / MARKDOWN / SVG / BINARY ...)
+const content = new SmartContent({ format: "TEXT", content: "# Hello" });
+await content.fetchAsync();
 
-// 使用智慧內容
-const content = new SmartContent("path/to/content.md");
-await content.load(); // 自動載入內容
+// Multilingual smart content: text/markdown will be translated & cached; SVG/binary are not translated but cloned
+const mlContent = new MultilingualSmartContent({ en: content });
+const jaText = await mlContent.toStringAsync("ja");
 ```
 
-## 開發
+## Development
 
-### 測試
+### Tests
 
 ```bash
 deno task test
+
+# Optional: run real Google translation integration (needs net + env)
+ALLOW_NET_TRANSLATION=1 deno test --allow-net --allow-env src/test/multilingual_string_test.ts
 ```
 
-### 開發模式
+### Dev mode
 
 ```bash
 deno task dev
 ```
 
-## 貢獻
+## Contributing
 
-歡迎提交 Issue 和 Pull Request！
+PRs and issues are welcome!
 
-## 許可證
+## Author
+
+Hector — hector@dui.com.tw
+
+## License
 
 MIT

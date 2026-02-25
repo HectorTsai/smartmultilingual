@@ -1,6 +1,6 @@
 import MultilingualObject from '../core/base.ts';
-import { SmartContent } from '../utils/content/smart-content.ts';
-import { ContentRenderer } from '../utils/content/renderer.ts';
+import { SmartContent } from '../core/content/smart-content.ts';
+import { ContentRenderer } from '../core/content/renderer.ts';
 import type { MultilingualData, SupportedLanguage } from '../core/types.ts';
 
 /**
@@ -29,6 +29,41 @@ export default class MultilingualSmartContent extends MultilingualObject<SmartCo
         }
       }
     }
+  }
+
+  /**
+   * 取得指定語言的內容文字表示；若不存在則自動翻譯（僅文字/Markdown），SVG 不翻譯
+   */
+  public async toStringAsync(lang: SupportedLanguage, host?: string): Promise<string> {
+    const existing = this.getSmartContent(lang);
+    if (existing) {
+      await existing.fetchAsync();
+      const content = existing.content;
+      return typeof content === "string" ? content : '';
+    }
+
+    const sourceLang = this.findBestSourceLanguage();
+    if (!sourceLang) return '';
+
+    const sourceContent = this.getSmartContent(sourceLang);
+    if (!sourceContent) return '';
+
+    await sourceContent.fetchAsync();
+    const content = sourceContent.content;
+
+    // SVG 或二進位內容不進行翻譯，直接回傳
+    if (sourceContent.format === "SVG" || sourceContent.isBinaryFormat) {
+      const cloned = sourceContent.clone();
+      this.setSmartContent(lang, cloned);
+      return typeof content === "string" ? content : '';
+    }
+
+    if (typeof content !== "string") return '';
+
+    const translated = await this.translate(host ?? '', sourceLang, lang, content);
+    const newContent = new SmartContent({ format: sourceContent.format, content: translated });
+    this.setSmartContent(lang, newContent);
+    return translated;
   }
 
   /**

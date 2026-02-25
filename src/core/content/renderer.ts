@@ -1,6 +1,6 @@
 import type { SmartContent } from './smart-content.ts';
-import type { SupportedFormat } from '../file/formats.ts';
-import { 格式對應表 } from '../file/formats.ts';
+import type { SupportedFormat } from '../../utils/file/formats.ts';
+import { 格式對應表 } from '../../utils/file/formats.ts';
 
 type GfmRender = (markdown: string) => string | Promise<string>;
 
