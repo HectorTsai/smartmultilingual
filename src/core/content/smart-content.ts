@@ -335,7 +335,7 @@ export class SmartContent {
     });
 
     // 標記為已處理，因為我們已經處理了檔案內容
-    (instance as any)._isProcessed = true;
+    Reflect.set(instance, "_isProcessed", true);
 
     return instance;
   }
@@ -357,7 +357,7 @@ export class SmartContent {
   /**
    * 序列化為 JSON
    */
-  public toJSON() {
+  public toJSON(): { format: SupportedFormat; content: string } {
     if (this._content instanceof Uint8Array) {
       // 二進位內容轉為 base64
       return {

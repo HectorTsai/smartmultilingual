@@ -2,6 +2,7 @@
   "name": "@dui/smartmultilingual",
   "version": "0.1.0",
   "description": "Smart multilingual content library",
+  "license": "MIT",
   "exports": "./mod.ts",
   "tasks": {
     "test": "deno test",
