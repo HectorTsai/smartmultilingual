@@ -1,5 +1,5 @@
 import MultilingualObject from '../core/base.ts';
-import type { MultilingualData, SupportedLanguage } from '../core/types.ts';
+import type { SupportedLanguage } from '../core/types.ts';
 
 /**
  * 多國語言字串類別
@@ -8,10 +8,17 @@ import type { MultilingualData, SupportedLanguage } from '../core/types.ts';
 export default class MultilingualString extends MultilingualObject<string> {
   /**
    * 創建多國語言字串實例
-   * @param data 可選的初始資料
+   * @param data 可選的初始資料，接受任何語言代碼的物件
    */
-  public constructor(data?: MultilingualData<string>) {
-    super(data);
+  public constructor(data?: Record<string, string>) {
+    super();
+    if (data) {
+      for (const [lang, value] of Object.entries(data)) {
+        if (value !== undefined && value !== null) {
+          this.set(lang, value);
+        }
+      }
+    }
   }
 
   /**

@@ -2,6 +2,7 @@ import MultilingualObject from '../core/base.ts';
 import { SmartContent } from '../core/content/smart-content.ts';
 import { ContentRenderer } from '../core/content/renderer.ts';
 import type { MultilingualData, SupportedLanguage } from '../core/types.ts';
+import type { SupportedFormat } from '../utils/file/formats.ts';
 
 /**
  * 多國語言智慧內容類別
@@ -10,22 +11,24 @@ import type { MultilingualData, SupportedLanguage } from '../core/types.ts';
 export default class MultilingualSmartContent extends MultilingualObject<SmartContent> {
   /**
    * 創建多國語言智慧內容實例
-   * @param data 可選的初始資料
+   * @param data 可選的初始資料，接受任何語言代碼的物件
    */
   public constructor(
-    data?: MultilingualData<SmartContent | { format: string; content: string | Uint8Array }>,
+    data?: Record<string, SmartContent | { format: string; content: string | Uint8Array }>,
   ) {
     super();
 
     if (data) {
-      for (const [lang, content] of Object.entries(data)) {
-        if (content instanceof SmartContent) {
-          this.set(lang as SupportedLanguage, content);
-        } else if (content && typeof content === "object" && "format" in content && "content" in content) {
-          this.set(lang as SupportedLanguage, new SmartContent({
-            format: content.format as any, // 這裡需要更好的型別處理
-            content: content.content,
-          }));
+      for (const [lang, value] of Object.entries(data)) {
+        if (value !== undefined && value !== null) {
+          if (value instanceof SmartContent) {
+            this.set(lang as SupportedLanguage, value);
+          } else if (value && typeof value === "object" && "format" in value && "content" in value) {
+            this.set(lang as SupportedLanguage, new SmartContent({
+              format: value.format as SupportedFormat,
+              content: value.content,
+            }));
+          }
         }
       }
     }
@@ -75,7 +78,7 @@ export default class MultilingualSmartContent extends MultilingualObject<SmartCo
     const instance = new MultilingualSmartContent();
     for (const [lang, content] of Object.entries(data)) {
       instance.set(lang as SupportedLanguage, new SmartContent({
-        format: content.format as any,
+        format: content.format as SupportedFormat,
         content: content.content,
       }));
     }
@@ -176,7 +179,7 @@ export default class MultilingualSmartContent extends MultilingualObject<SmartCo
     const sourceLang = this.findBestSourceLanguage(preferredLang);
     if (!sourceLang) return '';
 
-    return this.renderAsync(sourceLang, format, converters);
+    return await this.renderAsync(sourceLang, format, converters);
   }
 
   /**
