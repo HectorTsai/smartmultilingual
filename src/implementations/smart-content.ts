@@ -14,7 +14,7 @@ export default class MultilingualSmartContent extends MultilingualObject<SmartCo
    * @param data 可選的初始資料，接受任何語言代碼的物件
    */
   public constructor(
-    data?: Record<string, SmartContent | { format: string; content: string | Uint8Array }>,
+    data?: { [key: string]: SmartContent | { format: string; content: string | Uint8Array } } | undefined | null,
   ) {
     super();
 

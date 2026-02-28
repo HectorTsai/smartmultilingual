@@ -10,7 +10,7 @@ export default class MultilingualString extends MultilingualObject<string> {
    * 創建多國語言字串實例
    * @param data 可選的初始資料，接受任何語言代碼的物件
    */
-  public constructor(data?: Record<string, string>) {
+  public constructor(data?: { [key: string]: string } | undefined | null) {
     super();
     if (data) {
       for (const [lang, value] of Object.entries(data)) {
