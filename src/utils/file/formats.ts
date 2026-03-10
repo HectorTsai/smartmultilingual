@@ -1,3 +1,6 @@
+/**
+ * 格式對應表：描述支援的內容格式、對應副檔名、MIME、類型與 magic numbers。
+ */
 export const 格式對應表 = {
   // 文字格式
   "TEXT": {
@@ -126,10 +129,18 @@ export const 格式對應表 = {
   },
 } as const;
 
+/** 支援的內容格式代碼（鍵為對應檔案格式名稱） */
 export type SupportedFormat = keyof typeof 格式對應表;
+
+/** 格式對應表的項目型別，描述副檔名、MIME、類型與 magic number 等資訊 */
 export type FileMappingItem = typeof 格式對應表[SupportedFormat];
 
 // 智慧內容介面定義
+/**
+ * 根據副檔名判斷內容格式。
+ * @param ext 副檔名（不含點）
+ * @returns 對應的格式代碼與資訊；若不支援則回傳 undefined。
+ */
 export function getFormatFromExt(
   ext: string,
 ): { ext: SupportedFormat; info: FileMappingItem } | undefined {
@@ -139,6 +150,11 @@ export function getFormatFromExt(
   return entry ? { ext: entry[0] as SupportedFormat, info: entry[1] } : undefined;
 }
 
+/**
+ * 根據 MIME 類型判斷內容格式。
+ * @param mime MIME 類型字串
+ * @returns 對應的格式代碼與資訊；若不支援則回傳 undefined。
+ */
 export function getFormatFromMime(
   mime: string,
 ): { ext: SupportedFormat; info: FileMappingItem } | undefined {

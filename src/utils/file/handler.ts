@@ -1,6 +1,6 @@
 import { extname } from "@std/path";
 import { extract } from "@std/front-matter/any";
-import { getFormatFromExt, 格式對應表 } from './formats.ts';
+import { getFormatFromExt } from './formats.ts';
 
 /**
  * 資源處理器類別
@@ -9,7 +9,9 @@ import { getFormatFromExt, 格式對應表 } from './formats.ts';
 export class ResourceHandler {
   /**
    * 智慧載入資源的主要方法
-   * 支援 HTTP URL、本地檔案路徑和純文字內容
+   * 支援 HTTP URL、本地檔案路徑和純文字內容。
+   * 若讀取失敗會根據副檔名回傳安全的預設值。
+   * @param fileOrUrl 檔案路徑、URL 或純文字內容
    */
   static async smartFetch(fileOrUrl: string): Promise<unknown> {
     const isHttp = fileOrUrl.startsWith("http");
@@ -36,7 +38,7 @@ export class ResourceHandler {
   }
 
   /**
-   * 處理 HTTP 資源
+   * 處理 HTTP 資源，並依 content-type 或副檔名判定文字/二進位。
    */
   private static async handleHttpResource(url: string): Promise<unknown> {
     const response = await fetch(url);
@@ -44,7 +46,7 @@ export class ResourceHandler {
       throw new Error(`HTTP ${response.status}: ${url}`);
     }
 
-    const contentType = response.headers.get("content-type") || "";
+    const _contentType = response.headers.get("content-type") || "";
     const ext = this.getExtension(url);
     const formatInfo = getFormatFromExt(ext);
 
@@ -73,7 +75,7 @@ export class ResourceHandler {
   }
 
   /**
-   * 處理 file:// 協議
+   * 處理 file:// 協議，轉為本機路徑後重用本地檔案邏輯。
    */
   private static async handleFileProtocol(fileUrl: string): Promise<unknown> {
     const filePath = fileUrl.replace("file://", "");
@@ -81,7 +83,7 @@ export class ResourceHandler {
   }
 
   /**
-   * 處理本地檔案
+   * 處理本地檔案，會依副檔名判斷文字/二進位，Markdown 解析 front matter，JSON 嘗試解析。
    */
   private static async handleLocalFile(filePath: string): Promise<unknown> {
     const ext = this.getExtension(filePath);
@@ -118,7 +120,7 @@ export class ResourceHandler {
   }
 
   /**
-   * 解析 Markdown 內容，處理 front matter
+   * 解析 Markdown 內容，處理 front matter。
    */
   private static parseMarkdown(content: string, file: string): string {
     try {
@@ -131,7 +133,7 @@ export class ResourceHandler {
   }
 
   /**
-   * 取得檔案副檔名
+   * 取得檔案副檔名（移除查詢與錨點，轉為小寫）。
    */
   private static getExtension(fileOrUrl: string): string {
     // 移除查詢參數和錨點
@@ -155,9 +157,9 @@ export class ResourceHandler {
   }
 
   /**
-   * 取得預設值
+   * 取得預設值：二進位回傳空 Uint8Array，文字回傳空字串。
    */
-  private static async getDefaultValue(ext: string): Promise<unknown> {
+  private static getDefaultValue(ext: string): unknown {
     // 根據格式類型返回適當的預設值
     const formatInfo = getFormatFromExt(ext);
     if (formatInfo?.info.type === "binary") {
@@ -167,8 +169,8 @@ export class ResourceHandler {
   }
 
   /**
-   * 檢查檔案路徑安全性
-   * 注意：這裡只做基本的檢查，依賴格式對應表提供主要的安全控制
+   * 檢查檔案路徑安全性（基礎防路徑遍歷，並可限制允許目錄）。
+   * 注意：這裡只做基本的檢查，依賴格式對應表提供主要的安全控制。
    */
   static validatePathSafety(
     filePath: string,

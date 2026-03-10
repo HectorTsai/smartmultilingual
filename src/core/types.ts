@@ -1,5 +1,5 @@
 /**
- * 支援的語言列表
+ * 支援的語言列表（Google Translate 代碼），可用來檢查是否支援指定語言。
  */
 export const SUPPORTED_LANGUAGES: readonly string[] = [
   "af",
@@ -114,7 +114,7 @@ export const SUPPORTED_LANGUAGES: readonly string[] = [
 ] as const;
 
 /**
- * 支援的語言型別
+ * 支援的語言型別，對應 {@link SUPPORTED_LANGUAGES} 內容。
  */
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 
@@ -124,6 +124,6 @@ export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 export type MultilingualData<T> = Record<SupportedLanguage, T>;
 
 /**
- * 所有語言集合（用於快速查找）
+ * 所有支援語言的集合，用於 O(1) 快速判斷語言是否受支援。
  */
 export const SUPPORTED_LANGUAGE_SET = new Set(SUPPORTED_LANGUAGES);
