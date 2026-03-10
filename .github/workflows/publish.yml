@@ -1,0 +1,30 @@
+name: Publish to JSR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to publish (ensure deno.json is bumped)"
+        required: false
+
+permissions:
+  contents: read
+  id-token: write # required for provenance / transparency log
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Publish to JSR
+        env:
+          JSR_AUTH_TOKEN: ${{ secrets.JSR_TOKEN }}
+        run: |
+          deno publish
