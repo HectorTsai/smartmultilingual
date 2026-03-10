@@ -15,6 +15,7 @@ export { ContentRenderer } from './src/core/content/renderer.ts';
 export { type TranslationInterface, DefaultTranslation, registerTranslation, getTranslation, clearTranslation } from './src/core/translation.ts';
 
 // Type definitions and utilities
+export { SUPPORTED_LANGUAGES, SUPPORTED_LANGUAGE_SET } from './src/core/types.ts';
 export type { SupportedLanguage, MultilingualData } from './src/core/types.ts';
 export type { SupportedFormat, FileMappingItem } from './src/utils/file/formats.ts';
 export { 格式對應表, getFormatFromExt, getFormatFromMime } from './src/utils/file/formats.ts';
