@@ -126,4 +126,4 @@ export type MultilingualData<T> = Record<SupportedLanguage, T>;
 /**
  * 所有支援語言的集合，用於 O(1) 快速判斷語言是否受支援。
  */
-export const SUPPORTED_LANGUAGE_SET = new Set(SUPPORTED_LANGUAGES);
+export const SUPPORTED_LANGUAGE_SET: ReadonlySet<SupportedLanguage> = new Set(SUPPORTED_LANGUAGES);
