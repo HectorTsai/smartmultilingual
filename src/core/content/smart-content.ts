@@ -1,4 +1,5 @@
 import { getFormatFromExt, 格式對應表 } from '../../utils/file/formats.ts';
+import { ResourceHandler } from '../../utils/file/handler.ts';
 import type { SupportedFormat, FileMappingItem } from '../../utils/file/formats.ts';
 
 /**
@@ -28,6 +29,15 @@ export class SmartContent {
    */
   public async fetchAsync(): Promise<void> {
     if (this._isProcessed) return;
+
+    // 處理本地檔案路徑 (包括 file:// URL)
+    if (typeof this._content === "string" && this.isLocalPath(this._content)) {
+      const pathOrUrl = this._content;
+      console.log(`[SmartContent] 檢測到本地檔案路徑，開始載入: ${pathOrUrl}`);
+      
+      await this.loadLocalContent(pathOrUrl);
+      return;
+    }
 
     // 處理 URL 內容
     if (typeof this._content === "string" && this.isURL(this._content)) {
@@ -73,9 +83,55 @@ export class SmartContent {
   private isURL(str: string): boolean {
     return str.startsWith("http://") ||
       str.startsWith("https://") ||
-      str.startsWith("file://") ||
-      str.startsWith("ftp://") ||
-      str.startsWith("data:");
+      str.startsWith("ftp://");
+  }
+
+  /**
+   * 判斷是否為本地檔案路徑 (包括 file:// URL)
+   */
+  private isLocalPath(str: string): boolean {
+    if (!str) return false;
+    
+    // file:// URL
+    if (str.startsWith("file://")) return true;
+    
+    // 絕對路徑
+    if (str.startsWith("/")) return true;
+    
+    // 相對路徑
+    if (str.startsWith("./") || str.startsWith("../")) return true;
+    
+    // Windows 路徑
+    if (/^[a-zA-Z]:[\\/]/.test(str)) return true;
+    
+    return false;
+  }
+
+  /**
+   * 載入本地檔案內容 (使用 ResourceHandler)
+   */
+  private async loadLocalContent(pathOrUrl: string): Promise<void> {
+    try {
+      const content = await ResourceHandler.smartFetch(pathOrUrl);
+      
+      if (content instanceof Uint8Array) {
+        this._content = content;
+        this._format = this.inferBinaryFormat(content, pathOrUrl);
+      } else if (typeof content === "string") {
+        this._content = content;
+        this._format = this.inferTextFormat(content, pathOrUrl);
+      } else {
+        // ResourceHandler 可能返回其他類型 (如 JSON 物件)
+        this._content = String(content);
+        this._format = this.inferTextFormat(String(content), pathOrUrl);
+      }
+      
+      console.log(`[SmartContent] 成功載入本地檔案: ${pathOrUrl} 格式:${this._format}`);
+    } catch (error) {
+      console.error(`[SmartContent] 讀取本地檔案失敗: ${pathOrUrl}`, error);
+    } finally {
+      this._isProcessed = true;
+    }
   }
 
   /**
